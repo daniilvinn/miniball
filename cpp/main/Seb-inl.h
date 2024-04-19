@@ -70,10 +70,6 @@ namespace SEB_NAMESPACE {
     if (support != NULL)
       delete support;
     support = new Subspan<Float, Pt, PointAccessor>(dim,S,farthest);
-
-    // statistics:
-    // initialize entry-counters to zero:
-    SEB_STATS(entry_count = std::vector<int>(S.size(),0));
   }
 
   template<typename Float, class Pt, class PointAccessor>
@@ -99,7 +95,6 @@ namespace SEB_NAMESPACE {
 
     // drop a point with non-positive coefficient, if any:
     if (minimum <= 0) {
-      SEB_LOG ("debug","  removing local point #" << smallest << std::endl);
       support->remove_point(smallest);
       return true;
     }
@@ -185,9 +180,6 @@ namespace SEB_NAMESPACE {
   // If such an attempt to drop fails, we are done;  because then
   // the center lies even conv(support).
   {
-    SEB_DEBUG (int iteration = 0;)
-
-    SEB_TIMER_START("computation");
 
     // optimistically, we set this flag now;
     // on return from this function it will be true:
@@ -200,11 +192,6 @@ namespace SEB_NAMESPACE {
 
     while (true) {
 
-      SEB_LOG ("debug","  iteration " << ++iteration << std::endl);
-
-      SEB_LOG ("debug","  " << support->size()
-               << " points on boundary" << std::endl);
-
       // Compute a walking direction and walking vector,
       // and check if the former is perhaps too small:
       while ((dist_to_aff
@@ -214,20 +201,13 @@ namespace SEB_NAMESPACE {
              <= Eps * radius_)
         // We are closer than Eps * radius_square, so we try a drop:
         if (!successful_drop()) {
-          // If that is not possible, the center lies in the convex hull
-          // and we are done.
-          SEB_TIMER_PRINT("computation");
           return;
         }
-
-      SEB_LOG ("debug","  distance to affine hull = "
-               << dist_to_aff << std::endl);
 
       // determine how far we can walk in direction center_to_aff
       // without losing any point ('stopper', say) in S:
       int stopper;
       Float scale = find_stop_fraction(stopper);
-      SEB_LOG ("debug","  stop fraction = " << scale << std::endl);
 
       // Note: In theory, the following if-statement should simply read
       //
@@ -252,19 +232,11 @@ namespace SEB_NAMESPACE {
         for (unsigned int i = 0; i < dim; ++i)
           radius_square += sqr(stop_point[i] - center[i]);
         radius_ = sqrt(radius_square);
-        SEB_LOG ("debug","  current radius = "
-                 << std::setiosflags(std::ios::scientific)
-                 << std::setprecision(17) << radius_
-                 << std::endl << std::endl);
 
         // and add stopper to support
         support->add_point(stopper);
-        SEB_STATS (++entry_count[stopper]);
-        SEB_LOG ("debug","  adding global point #" << stopper << std::endl);
       }
       else {
-        //  we can run unhindered into the affine hull
-        SEB_LOG ("debug","  moving into affine hull" << std::endl);
         for (unsigned int i=0; i<dim; ++i)
           center[i] += center_to_aff[i];
 
@@ -274,19 +246,12 @@ namespace SEB_NAMESPACE {
         for (unsigned int i = 0; i < dim; ++i)
           radius_square += sqr(stop_point[i] - center[i]);
         radius_ = sqrt(radius_square);
-        SEB_LOG ("debug","  current radius = "
-                 << std::setiosflags(std::ios::scientific)
-                 << std::setprecision(17) << radius_
-                 << std::endl << std::endl);
 
         // Theoretically, the distance to the affine hull is now zero
         // and we would thus drop a point in the next iteration.
         // For numerical stability, we don't rely on that to happen but
         // try to drop a point right now:
         if (!successful_drop()) {
-          // Drop failed, so the center lies in conv(support) and is thus
-          // optimal.
-          SEB_TIMER_PRINT("computation");
           return;
         }
       }
