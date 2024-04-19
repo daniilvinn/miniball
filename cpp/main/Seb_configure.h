@@ -14,12 +14,8 @@
 // #define SEB_ASSERTION_MODE          // enables (cheap) assertions
 // #define SEB_DEBUG_MODE              // enables debugging checks (cheap and
                                        // expensive ones) this enables
-                                       // assertion and timer mode as well
-// #define SEB_TIMER_MODE              // enables runtime measurements
-// #define SEB_STATS_MODE              // enables statistics
-
-#include "Seb_debug.h"
-
+                                       // assertion
+                                       
 // Fixes for GCC series 2.95.  (This fix is necessary for 2.95.2 at
 // least.  But I guess it is needed for any earlier version of the 2.95
 // series, too.)  Apparently, GCC doesn't come with a bitset and sstream
@@ -95,33 +91,5 @@
 #else // SEB_ASSERTION_MODE
   #define SEB_ASSERT(expr)
 #endif // SEB_ASSERTION_MODE
-
-// Timing mode:
-#ifdef SEB_TIMER_MODE
-  #define SEB_TIMER_START(timer) \
-    { \
-      SEB_NAMESPACE::Timer::instance().start(timer); \
-    }
-  #define SEB_TIMER_PRINT(timer) \
-    { \
-      std::cout << "Timer \'" << timer << "\': " \
-                << std::setprecision(5) \
-                << SEB_NAMESPACE::Timer::instance().lapse(timer) \
-                << 's' << std::endl; \
-    }
-  #define SEB_TIMER_STRING(timer) \
-    SEB_NAMESPACE::Timer::instance().lapse(timer)
-#else // SEB_TIMER_MOD
-  #define SEB_TIMER_START(timer)
-  #define SEB_TIMER_PRINT(timer)
-  #define SEB_TIMER_STRING(timer)
-#endif // SEB_TIMER_MODE
-
-// Stats mode:
-#ifdef SEB_STATS_MODE
-  #define SEB_STATS(expr) { expr; }
-#else // SEB_STATS_MODE
-  #define SEB_STATS(expr)
-#endif // SEB_STATS_MODE
 
 #endif // SEB_CONFIGURE_H
